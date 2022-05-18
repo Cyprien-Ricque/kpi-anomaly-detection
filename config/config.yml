@@ -1,0 +1,12 @@
+device: 'cpu'
+
+seed: False
+
+data:
+    path: './data/'
+    train_file: 'train.csv'
+    test_file: 'test.csv'
+
+preprocessing:
+    scale: True
+    fill_missing_dates: True
