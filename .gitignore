@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# evaluation files
+predict.csv
+ground_truth.hdf
