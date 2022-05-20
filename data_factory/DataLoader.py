@@ -1,8 +1,9 @@
 from utils.config import load_config
-from preprocessing import *
+from data_factory.preprocessing import *
 
 import numpy as np
 import pandas as pd
+import math
 
 import logging
 from logging import DEBUG, INFO, WARNING
@@ -16,9 +17,10 @@ logger.setLevel(DEBUG)
 
 
 class DataLoader:
-    def __init__(self, config=load_config(), log_level: int = INFO, use_previous_files=True):
+    def __init__(self, config_file='../config/config.yml', log_level: int = INFO, use_previous_files=True):
         logger.setLevel(log_level)
 
+        config = load_config(config_file)
         """Create variables from config"""
         self.data_folder = config['data']['path']
         self.train_file = self.data_folder + config['data']['train_file']
