@@ -28,7 +28,7 @@ class DataLoader:
         self._do_fill_missing_dates = config['preprocessing']['fill_missing_dates']
         self._do_scale = config['preprocessing']['scale']
 
-        self.export_file_name = f"{self.data_folder}/data_export_{config['data']['train_file']}_{config['data']['test_file']}_fmd-{self._do_fill_missing_dates}_s-{self._do_scale}.p"
+        self.export_file_name = f"{self.data_folder}data_export_{config['data']['train_file']}_{config['data']['test_file']}_fmd-{self._do_fill_missing_dates}_s-{self._do_scale}.p"
 
         logger.debug(f'Use config {config}')
 
