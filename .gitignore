@@ -131,3 +131,5 @@ dmypy.json
 # evaluation files
 predict.csv
 ground_truth.hdf
+
+data/
