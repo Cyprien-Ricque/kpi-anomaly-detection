@@ -1,4 +1,4 @@
-from utils.config import load_config
+from utils.utils import load_config
 from data_factory.preprocessing import *
 
 import numpy as np
@@ -17,7 +17,7 @@ logger.setLevel(DEBUG)
 
 
 class DataLoader:
-    def __init__(self, config_file='../config/config.yml', log_level: int = INFO, use_previous_files=True):
+    def __init__(self, config_file='../config/config.yml', train_val_split=0.95, log_level: int = INFO, use_previous_files=True):
         logger.setLevel(log_level)
 
         config = load_config(config_file)
@@ -38,7 +38,7 @@ class DataLoader:
             self.from_file()
         else:
             self.load()
-            self.preprocess()
+            self.preprocess(train_val_split=train_val_split)
             self.to_file()
 
     def load(self):
@@ -54,11 +54,11 @@ class DataLoader:
         self._df_train['datetime'] = pd.to_datetime(self._df_train.timestamp, unit='s')
         self._df_test['datetime'] = pd.to_datetime(self._df_test.timestamp, unit='s')
 
-    def preprocess(self):
+    def preprocess(self, train_val_split=.95):
         if self._do_fill_missing_dates:
             self.__fill_missing_dates()
 
-        self._train, self._val = split_train_val_timeseries(self._df_train, id='kpi_id', train_val_split=.95)
+        self._train, self._val = split_train_val_timeseries(self._df_train, id='kpi_id', train_val_split=train_val_split)
         self._test = self._df_test.copy()
         logger.debug(f'Data split. train: {self._train.shape}  val: {self._val.shape}')
 
@@ -77,7 +77,7 @@ class DataLoader:
 
     def __fill_missing_dates(self):
         self._df_train = fill_missing_dates(self._df_train)
-        # self._df_test = fill_empty_dates(self._df_test)  # Not sure what to do there.
+        # self._df_test = fill_empty_dates(self._df_test)  # TODO Not sure what to do there.
         logger.debug('Fill missing dates done')
 
     def __dict__(self):
