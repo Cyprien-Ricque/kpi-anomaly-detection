@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # evaluation files
-predict.csv
-ground_truth.hdf
+data/predict.csv
+data/ground_truth.hdf
