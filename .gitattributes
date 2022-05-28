@@ -1,2 +1,14 @@
 data filter=lfs diff=lfs merge=lfs -text
 notebooks/lightning_logs filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-True_True_True_True.p filter=lfs diff=lfs merge=lfs -text
+data/ground_truth.hdf filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-dict_values([True,[[:space:]]True,[[:space:]]False,[[:space:]]True]).p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-False_s-True.p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-True_False_True_True_0.95.p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-True_False_True_True_1.p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-True_True_False_True.p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-False_s-False.p filter=lfs diff=lfs merge=lfs -text
+data/data_export_train.csv_test.csv_fmd-True_s-True.p filter=lfs diff=lfs merge=lfs -text
+data/predict.csv filter=lfs diff=lfs merge=lfs -text
+data/test.csv filter=lfs diff=lfs merge=lfs -text
+data/train.csv filter=lfs diff=lfs merge=lfs -text
