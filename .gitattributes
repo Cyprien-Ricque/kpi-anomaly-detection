@@ -12,3 +12,5 @@ data/data_export_train.csv_test.csv_fmd-True_s-True.p filter=lfs diff=lfs merge=
 data/predict.csv filter=lfs diff=lfs merge=lfs -text
 data/test.csv filter=lfs diff=lfs merge=lfs -text
 data/train.csv filter=lfs diff=lfs merge=lfs -text
+lightning_logs filter=lfs diff=lfs merge=lfs -text
+lightning_logs/* filter=lfs diff=lfs merge=lfs -text
