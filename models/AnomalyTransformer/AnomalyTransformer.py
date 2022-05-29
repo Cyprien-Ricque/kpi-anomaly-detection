@@ -120,19 +120,20 @@ class AnomalyTransformer(pl.LightningModule):
 
     def _prepare_batch(self, batch):
         X, (y, _) = batch
-        seq_true = X['encoder_cont']
+        X_values = X['encoder_cont'][:, :, :1]
+        y_values = X['encoder_cont'][:, :, 1:2]
         filter_ = X['encoder_cat'].to(torch.bool)[:, :, :1]
-        return filter_, seq_true
+        return X_values, y_values, filter_
 
     def _common_step(self, batch, batch_idx, stage: str):
-        filter_, seq_true = self._prepare_batch(batch)
-        output, series, prior, _ = self(seq_true)
+        X_values, y_values, filter_ = self._prepare_batch(batch)
+        output, series, prior, _ = self(X_values)
 
-        min_loss, max_loss = self.min_max_loss(seq_true, output, prior, series)
+        min_loss, max_loss = self.min_max_loss(y_values, output, prior, series)
 
-        self.log(f"{stage}_loss", min_loss + max_loss, on_step=True, batch_size=seq_true.shape[0])
-        self.log(f"{stage}_min_loss", min_loss, on_step=True, batch_size=seq_true.shape[0])
-        self.log(f"{stage}_max_loss", max_loss, on_step=True, batch_size=seq_true.shape[0])
+        self.log(f"{stage}_loss", min_loss + max_loss, on_step=True, batch_size=X_values.shape[0])
+        self.log(f"{stage}_min_loss", min_loss, on_step=True, batch_size=X_values.shape[0])
+        self.log(f"{stage}_max_loss", max_loss, on_step=True, batch_size=X_values.shape[0])
         return min_loss, max_loss
 
     def my_kl_loss(self, p, q):

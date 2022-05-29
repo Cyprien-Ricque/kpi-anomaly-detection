@@ -14,14 +14,14 @@ import numpy as np
 from tqdm import tqdm
 
 # sys.path.append('/media/cyprien/Data/Documents/Github/pytorch-forecasting')
-sys.path.append('../../pytorch-forecasting')
+sys.path.append('../pytorch-forecasting')
 
 
-config_file = "../config/config.yml"
+config_file = "./config/config_cloud.yml"
 config = load_config(config_file)
 
-result_file = '../predict.csv'
-truth_file = '../ground_truth.hdf'
+result_file = './predict.csv'
+truth_file = './ground_truth.hdf'
 
 
 dl = DataLoader(use_previous_files=True, config_file=config_file)
@@ -31,24 +31,23 @@ max_prediction_length = 1
 max_encoder_length = config['AnomalyTransformer']['max_seq_len']
 min_encoder_length = config['AnomalyTransformer']['min_seq_len']
 
-
 from pytorch_forecasting import TimeSeriesDataSet
 
-X_cols = ['value_scaled', 'kpi_id', 'timestamp_1', 'authentic']
-normal_train = dl.train.reset_index(drop=True)
+X_cols = ['value_scaled', 'kpi_id', 'timestamp_1', 'authentic', 'label']
+X_cols_test = ['value_scaled', 'kpi_id', 'timestamp_1', 'authentic']
 
 training = TimeSeriesDataSet(
-    normal_train.loc[:, X_cols],
-    time_idx='timestamp_1', target='value_scaled',
+    dl.train.loc[:, X_cols],
+    time_idx='timestamp_1', target='label',
     group_ids=['kpi_id'],
     allow_missing_timesteps=False,
     static_categoricals=['kpi_id', 'authentic'],
-    time_varying_unknown_reals=['value_scaled'],
+    time_varying_unknown_reals=['value_scaled', 'label'],
     # time_varying_known_reals=['timestamp_1'],
     max_encoder_length=max_encoder_length,
     min_encoder_length=min_encoder_length,
     max_prediction_length=max_prediction_length,
-    scalers={col: None for col in ['timestamp_1', 'kpi_id']},
+    scalers={col: None for col in ['timestamp_1', 'kpi_id', 'value_scaled']},
     target_normalizer=None,
     add_relative_time_idx=False,
     add_target_scales=False,
@@ -59,9 +58,12 @@ validation = TimeSeriesDataSet.from_dataset(
     training, dl.val.loc[:, X_cols], stop_randomization=True, predict=False
 )
 testing = TimeSeriesDataSet.from_dataset(
-    training, dl.test.loc[:, X_cols], stop_randomization=True, predict=False, min_encoder_length=max_encoder_length
-)
+    training, dl.test.loc[:, X_cols_test], stop_randomization=True, predict=False, min_encoder_length=max_encoder_length,
+    target='value_scaled',
+    scalers={col: None for col in ['timestamp_1', 'kpi_id']},
+    time_varying_unknown_reals=['value_scaled'],
 
+)
 
 batch_size = 64
 
@@ -71,24 +73,23 @@ validation_dl = validation.to_dataloader(train=False, batch_size=batch_size, num
 testing_dl = testing.to_dataloader(train=False, batch_size=batch_size * 3, num_workers=12)
 
 
-
 from models.AnomalyTransformer.AnomalyTransformer import AnomalyTransformer
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+use_cuda = False
+device = torch.device("cuda" if torch.cuda.is_available() and use_cuda else "cpu")
 print("Using", device)
 n_features = 1
 
 
 from tqdm import tqdm
 
-model = AnomalyTransformer(
+args = dict(
     win_size=max_encoder_length, enc_in=n_features, c_out=1,
     d_model=256, n_heads=4, e_layers=2, d_ff=256,
     dropout=0.0, activation='gelu', output_attention=True
 )
 
-# model = LitAE.load_from_checkpoint("./lightning_logs/version_1/checkpoints/epoch=4-step=171145.ckpt",
-#                                    input_shape=max_encoder_length, n_dim=n_dim)
+model = AnomalyTransformer(**args)
 
 
 # In[11]:
@@ -96,7 +97,8 @@ model = AnomalyTransformer(
 
 from pytorch_lightning.trainer import Trainer
 
-trainer = Trainer(logger=True, enable_checkpointing=True, checkpoint_callback=None, gpus=1, auto_lr_find=True, max_epochs=-1)
+trainer = Trainer(logger=True, enable_checkpointing=True, checkpoint_callback=None, gpus=1 if device == 'cuda' else 0,
+                  auto_lr_find=True, max_epochs=-1)
 
 trainer.validate(model=model, dataloaders=validation_dl)
 
@@ -127,7 +129,7 @@ def predict_value(df: pd.DataFrame):
     pv_forward[np.isnan(pv_forward)] = 0
     pv_filter = np.where(np.isnan(pv_filter), 0, 1)
 
-    df['value_pred'] = np.nan
+    df['label_pred'] = np.nan
 
     for i in tqdm(np.arange(0, pv.index.max() + 1, max_encoder_length)):
         pv_forward_i = pv_forward[:, i:i + max_encoder_length]
@@ -136,13 +138,13 @@ def predict_value(df: pd.DataFrame):
         X = torch.from_numpy(pv_forward_i.copy())
         X = X.reshape(X.shape[0], X.shape[1], 1)
 
-        y_pred, _, _, _ = model(X.to(device))
+        y_pred, _, _, _ = model(X)
 
         validation_filter = df.groupby('kpi_id').apply(
             lambda x: (x.timestamp_1_floor >= i) & (x.timestamp_1_floor < i + max_encoder_length)).reset_index(
             drop=True)
 
-        df.loc[validation_filter, 'value_pred'] = y_pred.cpu().detach().numpy()[pv_filter_i.astype(bool)].flatten()
+        df.loc[validation_filter, 'label_pred'] = y_pred.cpu().detach().numpy()[pv_filter_i.astype(bool)].flatten()
 
 
 predict_value(dl.train)

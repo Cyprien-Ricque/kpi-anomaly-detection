@@ -25,8 +25,8 @@ LSTMAutoEncoder:
     min_seq_len: 500
 
 AnomalyTransformer:
-    max_seq_len: 300
-    min_seq_len: 300
+    max_seq_len: 400
+    min_seq_len: 400
 
 
 AttnLSTMAutoEncoder:

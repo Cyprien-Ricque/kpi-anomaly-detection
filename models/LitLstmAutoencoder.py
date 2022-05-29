@@ -1,20 +1,15 @@
-import pytorch_lightning as pl
-import torch
-import torch.nn.functional as F
-from torch import nn
-
 import logging
-from logging import DEBUG, INFO
+from logging import DEBUG
+
+import pytorch_lightning as pl
+import torch.nn.functional as F
+
 logging.basicConfig(level=DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(DEBUG)
 
-import os
 import torch
 import torch.nn as nn
-import numpy as np
-import pandas as pd
-from tqdm import tqdm_notebook as tqdm
 
 torch.manual_seed(0)
 
@@ -24,24 +19,23 @@ class Encoder(pl.LightningModule):
         super().__init__()
 
         self.seq_len = seq_len
-        self.no_features = no_features    # The number of expected features(= dimension size) in the input x
-        self.embedding_size = embedding_size   # the number of features in the embedded points of the inputs' number of features
+        self.no_features = no_features  # The number of expected features(= dimension size) in the input x
+        self.embedding_size = embedding_size  # the number of features in the embedded points of the inputs' number of features
         self.hidden_size = (2 * embedding_size)  # The number of features in the hidden state h
         self.LSTM1 = nn.LSTM(
-            input_size = no_features,
-            hidden_size = embedding_size,
-            num_layers = 1,
+            input_size=no_features,
+            hidden_size=embedding_size,
+            num_layers=1,
             batch_first=True
         )
 
     def forward(self, x):
         # Inputs: input, (h_0, c_0). -> If (h_0, c_0) is not provided, both h_0 and c_0 default to zero.
         x, (hidden_state, cell_state) = self.LSTM1(x)
-        last_lstm_layer_hidden_state = hidden_state[-1,:,:]
+        last_lstm_layer_hidden_state = hidden_state[-1, :, :]
         return last_lstm_layer_hidden_state
 
 
-# (2) Decoder
 class Decoder(pl.LightningModule):
     def __init__(self, seq_len, no_features, output_size):
         super().__init__()
@@ -51,10 +45,10 @@ class Decoder(pl.LightningModule):
         self.hidden_size = (2 * no_features)
         self.output_size = output_size
         self.LSTM1 = nn.LSTM(
-            input_size = no_features,
-            hidden_size = self.hidden_size,
-            num_layers = 1,
-            batch_first = True
+            input_size=no_features,
+            hidden_size=self.hidden_size,
+            num_layers=1,
+            batch_first=True
         )
 
         self.fc = nn.Linear(self.hidden_size, output_size)
@@ -136,53 +130,9 @@ class LSTM_AE(pl.LightningModule):
 
 
 if __name__ == '__main__':
-
-
     model = LSTM_AE(seq_len=118, no_features=4, embedding_dim=64)
 
     data = torch.rand(5, 118, 4)
     print(data.shape)
     a = model(data)
     print(a.shape)
-
-
-
-
-
-
-
-    #
-    # def fit(self, x):
-    #     """
-    #     trains the model's parameters over a fixed number of epochs, specified by `n_epochs`, as long as the loss keeps decreasing.
-    #     :param dataset: `Dataset` object
-    #     :param bool save: If true, dumps the trained model parameters as pickle file at `dload` directory
-    #     :return:
-    #     """
-    #     optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
-    #     criterion = nn.MSELoss(reduction='mean')
-    #     self.train()
-    #     # initialize the early_stopping object
-    #
-    #     for epoch in range(1 , self.epochs+1):
-    #         # updating early_stopping's epoch
-    #         optimizer.zero_grad()
-    #         encoded, decoded = self(x)
-    #         loss = criterion(decoded , x)
-    #
-    #         # Backward pass
-    #         loss.backward()
-    #         nn.utils.clip_grad_norm_(self.parameters(), max_norm = self.max_grad_norm)
-    #         optimizer.step()
-    #
-    #         if epoch % self.every_epoch_print == 0:
-    #             print(f"epoch : {epoch}, loss_mean : {loss.item():.7f}")
-    #
-    #     # load the last checkpoint with the best model
-    #     self.load_state_dict(torch.load('./checkpoint.pt'))
-    #
-    #     # to check the final_loss
-    #     encoded, decoded = self(x)
-    #     final_loss = criterion(decoded , x).item()
-    #
-    #     return final_loss
