@@ -131,5 +131,5 @@ dmypy.json
 # evaluation files
 predict.csv
 ground_truth.hdf
-
-data/
+./data/**
+./notebooks/lightning_logs/**

@@ -1,0 +1,52 @@
+device: 'cpu'
+
+seed: False
+
+data:
+    path: './data/'
+    train_file: 'train.csv'
+    test_file: 'test.csv'
+
+preprocessing:
+    scale: True
+    positive: False  # Not coded
+    fill_missing_dates: True
+    group_to_one_hot: True
+    train_val_split: 0.95  # 1 = no split : 100% train 0% val
+
+LinearAutoEncoder:
+    in_features: 256
+    max_seq_len: 24000
+    min_seq_len: 8000
+
+LSTMAutoEncoder:
+    embedding_dim: 128
+    max_seq_len: 500
+    min_seq_len: 500
+
+AnomalyTransformer:
+    max_seq_len: 400
+    min_seq_len: 400
+
+
+AttnLSTMAutoEncoder:
+    batch_size: 8
+    output_size: 1
+    input_att: True
+    temporal_att: True
+    seq_len: None
+    prediction_window: 1
+    hidden_size_decoder: 24
+    hidden_size_encoder: 24
+    reg1: True
+    reg2: False
+    reg_factor1: 0.0004
+    reg_factor2: 0.0004
+    denoising: False
+    directions: 1
+    max_grad_norm: 0.1
+    gradient_accumulation_steps: 1
+    logging_steps: 100
+    lrs_step_size: 5000
+    eval_during_training: True
+

@@ -10,7 +10,6 @@ from logging import DEBUG, INFO, WARNING
 import pickle
 import os
 
-
 logging.basicConfig(level=DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(DEBUG)
@@ -27,14 +26,18 @@ class DataLoader:
         self.test_file = self.data_folder + config['data']['test_file']
         self._do_fill_missing_dates = config['preprocessing']['fill_missing_dates']
         self._do_scale = config['preprocessing']['scale']
+        # self._force_positive = config['preprocessing']['positive']
+        self._group_to_one_hot = config['preprocessing']['group_to_one_hot']
+        self._train_val_split = train_val_split
 
-        self.export_file_name = f"{self.data_folder}data_export_{config['data']['train_file']}_{config['data']['test_file']}_fmd-{self._do_fill_missing_dates}_s-{self._do_scale}.p"
+        self.export_file_name = f"{self.data_folder}/data_export_{config['data']['train_file']}_{config['data']['test_file']}_fmd-{'_'.join([str(i) for i in config['preprocessing'].values()])}.p"
 
         logger.debug(f'Use config {config}')
 
         """Load data"""
         if use_previous_files and os.path.exists(self.export_file_name):
-            logger.info(f'Use previously generated file {self.export_file_name}. Can not redo preprocessing by loading from generated file.')
+            logger.info(
+                f'Use previously generated file {self.export_file_name}. Can not redo preprocessing by loading from generated file.')
             self.from_file()
         else:
             self.load()
@@ -54,7 +57,7 @@ class DataLoader:
         self._df_train['datetime'] = pd.to_datetime(self._df_train.timestamp, unit='s')
         self._df_test['datetime'] = pd.to_datetime(self._df_test.timestamp, unit='s')
 
-    def preprocess(self, train_val_split=.95):
+    def preprocess(self):
         if self._do_fill_missing_dates:
             self.__fill_missing_dates()
 
@@ -64,6 +67,27 @@ class DataLoader:
 
         if self._do_scale:
             self.__scale()
+
+        self._train.sort_values(['kpi_id', 'datetime'], inplace=True)
+        self._test.sort_values(['kpi_id', 'datetime'], inplace=True)
+        self._val.sort_values(['kpi_id', 'datetime'], inplace=True)
+
+        self._train.reset_index(drop=True, inplace=True)
+        self._val.reset_index(drop=True, inplace=True)
+        self._test.reset_index(drop=True, inplace=True)
+
+        if self._group_to_one_hot:
+            self._train = pd.merge(self._train.reset_index(drop=False),
+                                   pd.get_dummies(self._train.kpi_id, prefix='index').reset_index(drop=False),
+                                   how='left',
+                                   left_on='index', right_on='index')
+            self._test = pd.merge(self._test.reset_index(drop=False),
+                                  pd.get_dummies(self._test.kpi_id, prefix='index').reset_index(drop=False), how='left',
+                                  left_on='index', right_on='index')
+            self._val = pd.merge(self._val.reset_index(drop=False),
+                                 pd.get_dummies(self._val.kpi_id, prefix='index').reset_index(drop=False), how='left',
+                                 left_on='index', right_on='index')
+            logger.debug('One hot encoding done.')
 
         logger.info('Preprocessing done.')
 
@@ -76,9 +100,27 @@ class DataLoader:
         logger.debug('Data scaled')
 
     def __fill_missing_dates(self):
-        self._df_train = fill_missing_dates(self._df_train)
-        # self._df_test = fill_empty_dates(self._df_test)  # TODO Not sure what to do there.
-        logger.debug('Fill missing dates done')
+        self._df_train = fill_missing_dates(
+            self._df_train,
+            date_col="datetime",
+            timestamp_col="timestamp",
+            grp_col="kpi_id",
+            fill_with_value={"label": 0},
+        )
+        self._df_test = fill_missing_dates(
+            self._df_test,
+            date_col="datetime",
+            timestamp_col="timestamp",
+            grp_col="kpi_id",
+        )
+
+        # self._df_train.authentic = self._df_train.authentic.astype(str)
+        # self._df_test.authentic = self._df_test.authentic.astype(str)
+
+        self._df_train["timestamp_1"] = (self._df_train.timestamp / 60).astype(int)
+        self._df_test["timestamp_1"] = (self._df_test.timestamp / 60).astype(int)
+
+        logger.debug("Fill missing dates done")
 
     def __dict__(self):
         return {
