@@ -9,9 +9,8 @@ data:
 
 preprocessing:
     scale: True
-    positive: False  # Not coded
     fill_missing_dates: True
-    group_to_one_hot: True
+    group_to_one_hot: False
     train_val_split: 0.95  # 1 = no split : 100% train 0% val
 
 LinearAutoEncoder:

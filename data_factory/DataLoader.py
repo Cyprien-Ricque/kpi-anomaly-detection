@@ -57,7 +57,7 @@ class DataLoader:
         self._df_train['datetime'] = pd.to_datetime(self._df_train.timestamp, unit='s')
         self._df_test['datetime'] = pd.to_datetime(self._df_test.timestamp, unit='s')
 
-    def preprocess(self):
+    def preprocess(self, train_val_split):
         if self._do_fill_missing_dates:
             self.__fill_missing_dates()
 
@@ -160,7 +160,7 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    dl = DataLoader(log_level=DEBUG, use_previous_files=True)
+    dl = DataLoader(log_level=DEBUG, use_previous_files=False)
     print(dl.train.shape)
     print(dl.val.shape)
     print(dl.test.shape)

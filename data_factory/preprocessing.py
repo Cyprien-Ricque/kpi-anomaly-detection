@@ -8,9 +8,9 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import logging
 from logging import DEBUG, INFO, WARNING
-logging.basicConfig(level=DEBUG)
+logging.basicConfig(level=INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(level=DEBUG)
+logger.setLevel(level=INFO)
 
 
 date_to_timestamp = {
@@ -30,7 +30,6 @@ def fill_missing_dates(df: pd.DataFrame,
                        ):
 
     def fill_na(data: pd.DataFrame):
-        # logger.debug(data.columns)
         logger.debug(f'Fill grp {data[grp_col].unique()[0]}. shape: {data.shape}')
         start = data[date_col].min()
         end = data[date_col].max()
