@@ -20,7 +20,7 @@ class DataLoader:
         logger.setLevel(log_level)
 
         config = load_config(config_file)
-        """Create variables from config"""
+        # Create variables from config
         self.data_folder = config['data']['path']
         self.train_file = self.data_folder + config['data']['train_file']
         self.test_file = self.data_folder + config['data']['test_file']
@@ -34,7 +34,7 @@ class DataLoader:
 
         logger.debug(f'Use config {config}')
 
-        """Load data"""
+        # Load data
         if use_previous_files and os.path.exists(self.export_file_name):
             logger.info(
                 f'Use previously generated file {self.export_file_name}. Can not redo preprocessing by loading from generated file.')

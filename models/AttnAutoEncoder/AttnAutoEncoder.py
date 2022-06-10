@@ -14,7 +14,7 @@ def init_hidden(x: torch.Tensor, hidden_size: int, num_dir: int = 1, xavier: boo
         x: (torch.Tensor): input tensor
         hidden_size: (int):
         num_dir: (int): number of directions in LSTM
-        xavier: (bool): wether or not use xavier initialization
+        xavier: (bool): whether use xavier initialization
     """
     if xavier:
         return nn.init.xavier_normal_(torch.zeros(num_dir, x.size(0), hidden_size)).to(device)
@@ -217,7 +217,7 @@ class AttnDecoder(nn.Module):
         return self.fc_out(torch.cat((h_t[0], context.to(device)), dim=1))  # predicting value at t=self.seq_length+1
 
 
-class AutoEncForecast(nn.Module):
+class AutoEnc(nn.Module):
     def __init__(self, config, input_size, input_att=True, temporal_att=True):
         """
         Initialize the network.
@@ -225,7 +225,7 @@ class AutoEncForecast(nn.Module):
             config:
             input_size: (int): size of the input
         """
-        super(AutoEncForecast, self).__init__()
+        super(AutoEnc, self).__init__()
         self.encoder = AttnEncoder(config, input_size).to(device) if input_att else \
             Encoder(config, input_size).to(device)
         self.decoder = AttnDecoder(config).to(device) if temporal_att else Decoder(config).to(device)
@@ -236,7 +236,7 @@ class AutoEncForecast(nn.Module):
         Args:
             encoder_input: (torch.Tensor): tensor of input data
             y_hist: (torch.Tensor): shifted target
-            return_attention: (bool): whether or not to return the attention
+            return_attention: (bool): whether to return the attention
         """
         attentions, encoder_output = self.encoder(encoder_input)
         outputs = self.decoder(encoder_output, y_hist.float())
@@ -245,6 +245,3 @@ class AutoEncForecast(nn.Module):
             return outputs, attentions
         return outputs
 
-
-if __name__ == '__main__':
-    model = AutoEncForecast()

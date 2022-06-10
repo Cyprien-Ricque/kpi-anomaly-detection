@@ -11,22 +11,21 @@ preprocessing:
     scale: True
     fill_missing_dates: True
     group_to_one_hot: False
-    train_val_split: 0.95  # 1 = no split : 100% train 0% val
+    train_val_split: 0.90  # .95 = 95% train 5% val
 
 LinearAutoEncoder:
-    in_features: 256
-    max_seq_len: 24000
-    min_seq_len: 8000
+    in_features: 64
+    max_seq_len: 500
+    min_seq_len: 500
 
 LSTMAutoEncoder:
-    embedding_dim: 128
+    embedding_dim: 64
     max_seq_len: 500
     min_seq_len: 500
 
 AnomalyTransformer:
     max_seq_len: 400
     min_seq_len: 400
-
 
 AttnLSTMAutoEncoder:
     batch_size: 8
